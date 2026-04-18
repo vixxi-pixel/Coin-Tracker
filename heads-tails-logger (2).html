@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heads or Tails Logger</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@600;700;800&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1a1f3a 50%, #2d1b4e 100%);
+            min-height: 100vh;
+            font-family: 'Space Mono', monospace;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(168, 85, 247, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .card {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            border-radius: 20px;
+            padding: 40px 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.5em;
+            font-weight: 800;
+            background: linear-gradient(135deg, #a855f7 0%, #3b82f6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-size: 0.9em;
+            color: rgba(255, 255, 255, 0.5);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .button-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .choice-button {
+            padding: 30px 20px;
+            border: none;
+            border-radius: 16px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.8em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .choice-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            transition: left 0.3s ease;
+            z-index: 1;
+        }
+
+        .choice-button:hover::before {
+            left: 100%;
+        }
+
+        .choice-button span {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .heads-button {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: #78350f;
+            box-shadow: 0 10px 30px rgba(251, 191, 36, 0.3);
+        }
+
+        .heads-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(251, 191, 36, 0.4);
+        }
+
+        .heads-button:active {
+            transform: translateY(-1px);
+        }
+
+        .tails-button {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+        }
+
+        .tails-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(59, 130, 246, 0.4);
+        }
+
+        .tails-button:active {
+            transform: translateY(-1px);
+        }
+
+        .emoji {
+            font-size: 2.5em;
+        }
+
+        .label {
+            font-size: 0.6em;
+            opacity: 0.8;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-box {
+            background: rgba(168, 85, 247, 0.1);
+            border: 1px solid rgba(168, 85, 247, 0.2);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-box:hover {
+            background: rgba(168, 85, 247, 0.15);
+            border-color: rgba(168, 85, 247, 0.4);
+        }
+
+        .stat-label {
+            font-size: 0.75em;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2em;
+            font-weight: 700;
+            background: linear-gradient(135deg, #a855f7 0%, #3b82f6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .history-section {
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 1px solid rgba(168, 85, 247, 0.2);
+        }
+
+        .history-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 12px;
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 6px;
+            max-height: 100px;
+            overflow-y: auto;
+            padding-right: 6px;
+            align-content: flex-start;
+        }
+
+        .history-item {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .history-item.heads {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+            border: 1px solid rgba(251, 191, 36, 0.3);
+        }
+
+        .history-item.tails {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .history-item:hover {
+            transform: scale(1.15);
+            filter: brightness(1.2);
+        }
+
+        .history-item.delete::after {
+            content: '×';
+            position: absolute;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .reset-button {
+            width: 100%;
+            margin-top: 20px;
+            padding: 10px;
+            background: rgba(168, 85, 247, 0.1);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            color: rgba(168, 85, 247, 0.8);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.85em;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .reset-button:hover {
+            background: rgba(168, 85, 247, 0.2);
+            border-color: rgba(168, 85, 247, 0.5);
+            color: rgba(168, 85, 247, 1);
+        }
+
+        .undo-button {
+            width: 100%;
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(251, 191, 36, 0.1);
+            border: 1px solid rgba(251, 191, 36, 0.3);
+            color: rgba(251, 191, 36, 0.8);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.85em;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .undo-button:hover:not(:disabled) {
+            background: rgba(251, 191, 36, 0.2);
+            border-color: rgba(251, 191, 36, 0.5);
+            color: rgba(251, 191, 36, 1);
+        }
+
+        .undo-button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        @media (max-width: 480px) {
+            .card {
+                padding: 30px 20px;
+            }
+
+            .title {
+                font-size: 2em;
+            }
+
+            .choice-button {
+                padding: 25px 15px;
+                font-size: 1.5em;
+            }
+
+            .emoji {
+                font-size: 2em;
+            }
+
+            .label {
+                font-size: 0.5em;
+            }
+        }
+
+        /* Scrollbar styling */
+        .history-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .history-list::-webkit-scrollbar-track {
+            background: rgba(168, 85, 247, 0.1);
+            border-radius: 10px;
+        }
+
+        .history-list::-webkit-scrollbar-thumb {
+            background: rgba(168, 85, 247, 0.3);
+            border-radius: 10px;
+        }
+
+        .history-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(168, 85, 247, 0.5);
+        }
+
+        .empty-message {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.9em;
+            padding: 20px;
+        }
+
+        .sequence-separator {
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, rgba(168, 85, 247, 0.3) 0%, rgba(168, 85, 247, 0.6) 50%, rgba(168, 85, 247, 0.3) 100%);
+            border-radius: 1px;
+            margin: 8px 0;
+            flex-basis: 100%;
+        }
+
+        .sequence-separator::after {
+            content: '';
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <div class="title">H or T?</div>
+                <div class="subtitle">Quick Result Logger</div>
+                <div style="font-size: 0.75em; color: rgba(255, 255, 255, 0.4); margin-top: 8px;">Press <strong>A</strong> for Heads • <strong>D</strong> for Tails • <strong>Space</strong> for New Sequence • <strong>Ctrl+Z</strong> to Undo</div>
+            </div>
+
+            <div class="button-grid">
+                <button class="choice-button heads-button" id="headsBtn">
+                    <span>
+                        <div class="emoji">🪙</div>
+                        <div class="label">HEADS</div>
+                    </span>
+                </button>
+                <button class="choice-button tails-button" id="tailsBtn">
+                    <span>
+                        <div class="emoji">🎲</div>
+                        <div class="label">TAILS</div>
+                    </span>
+                </button>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-label">Heads</div>
+                    <div class="stat-value" id="headsCount">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Tails</div>
+                    <div class="stat-value" id="tailsCount">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Total</div>
+                    <div class="stat-value" id="totalFlips">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Heads %</div>
+                    <div class="stat-value" id="headsPercent">0%</div>
+                </div>
+            </div>
+
+            <div class="history-section">
+                <div class="history-title">Recent Logs</div>
+                <div class="history-list" id="history"></div>
+            </div>
+
+            <button class="undo-button" id="undoBtn" disabled>↶ Undo Last</button>
+            <button class="reset-button" id="resetBtn">Reset All Data</button>
+        </div>
+    </div>
+
+    <script>
+        class ResultLogger {
+            constructor() {
+                this.data = this.loadData() || {
+                    heads: 0,
+                    tails: 0,
+                    history: [],
+                    sequences: [0] // Track where sequences start
+                };
+            }
+
+            loadData() {
+                try {
+                    const saved = localStorage.getItem('result-logger-data');
+                    if (!saved) return null;
+                    const data = JSON.parse(saved);
+                    // Ensure sequences array exists
+                    if (!data.sequences) {
+                        data.sequences = [0];
+                    }
+                    return data;
+                } catch {
+                    return null;
+                }
+            }
+
+            saveData() {
+                localStorage.setItem('result-logger-data', JSON.stringify(this.data));
+            }
+
+            log(result) {
+                this.data.history.push(result);
+                if (result === 'heads') {
+                    this.data.heads++;
+                } else {
+                    this.data.tails++;
+                }
+                this.saveData();
+                this.updateUI();
+            }
+
+            newSequence() {
+                if (this.data.history.length === 0) return;
+                if (this.data.sequences[this.data.sequences.length - 1] === this.data.history.length) {
+                    return; // Already at a sequence break
+                }
+                this.data.sequences.push(this.data.history.length);
+                this.saveData();
+                this.updateUI();
+            }
+
+            undo() {
+                if (this.data.history.length === 0) return;
+                
+                const last = this.data.history.pop();
+                if (last === 'heads') {
+                    this.data.heads--;
+                } else {
+                    this.data.tails--;
+                }
+                
+                // Remove sequence marker if it's at the end
+                if (this.data.sequences[this.data.sequences.length - 1] === this.data.history.length + 1) {
+                    this.data.sequences.pop();
+                }
+                
+                this.saveData();
+                this.updateUI();
+            }
+
+            updateUI() {
+                const total = this.data.heads + this.data.tails;
+                const headsPercent = total === 0 ? 0 : Math.round((this.data.heads / total) * 100);
+                
+                document.getElementById('headsCount').textContent = this.data.heads;
+                document.getElementById('tailsCount').textContent = this.data.tails;
+                document.getElementById('totalFlips').textContent = total;
+                document.getElementById('headsPercent').textContent = headsPercent + '%';
+                
+                document.getElementById('undoBtn').disabled = this.data.history.length === 0;
+                
+                this.updateHistory();
+            }
+
+            updateHistory() {
+                const historyEl = document.getElementById('history');
+                historyEl.innerHTML = '';
+                
+                if (this.data.history.length === 0) {
+                    historyEl.innerHTML = '<div class="empty-message">No logs yet</div>';
+                    return;
+                }
+                
+                // Show all flips with sequence separators
+                this.data.history.forEach((result, index) => {
+                    // Check if this index marks a sequence break
+                    if (this.data.sequences.includes(index) && index !== 0) {
+                        const separator = document.createElement('div');
+                        separator.className = 'sequence-separator';
+                        separator.title = 'Sequence break';
+                        historyEl.appendChild(separator);
+                    }
+                    
+                    const item = document.createElement('div');
+                    item.className = `history-item ${result}`;
+                    item.textContent = result === 'heads' ? 'H' : 'T';
+                    item.title = `Log #${index + 1}`;
+                    item.style.cursor = 'default';
+                    historyEl.appendChild(item);
+                });
+                
+                // Auto-scroll to bottom
+                historyEl.scrollTop = historyEl.scrollHeight;
+            }
+
+            reset() {
+                if (confirm('Are you sure you want to reset all data? This cannot be undone.')) {
+                    this.data = { heads: 0, tails: 0, history: [], sequences: [0] };
+                    localStorage.removeItem('result-logger-data');
+                    this.saveData();
+                    this.updateUI();
+                }
+            }
+        }
+
+        // Initialize
+        const logger = new ResultLogger();
+        logger.updateUI();
+
+        document.getElementById('headsBtn').addEventListener('click', () => {
+            logger.log('heads');
+        });
+
+        document.getElementById('tailsBtn').addEventListener('click', () => {
+            logger.log('tails');
+        });
+
+        document.getElementById('undoBtn').addEventListener('click', () => {
+            logger.undo();
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            logger.reset();
+        });
+
+        // Keyboard hotkeys
+        document.addEventListener('keydown', (e) => {
+            // Only trigger if not typing in an input
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+            const key = e.key.toLowerCase();
+            if (key === 'a') {
+                e.preventDefault();
+                logger.log('heads');
+            } else if (key === 'd') {
+                e.preventDefault();
+                logger.log('tails');
+            } else if (key === 'z' && e.ctrlKey) {
+                e.preventDefault();
+                logger.undo();
+            } else if (key === ' ') {
+                e.preventDefault();
+                logger.newSequence();
+            }
+        });
+    </script>
+</body>
+</html>
